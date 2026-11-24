@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase";
+import { createServerClient } from "@/lib/supabase";
 
 export default async function RecipesPage() {
-  const supabase = createClient();
-  const { data: recipes } = await supabase
+  const supabase = createServerClient();
+  const { data: recipes, error } = await supabase
     .from("recipes")
     .select("id,title,description,category")
     .order("created_at", { ascending: false });
@@ -18,6 +18,11 @@ export default async function RecipesPage() {
         <Link className="btn" href="/recipes/new">+ Rezept</Link>
       </div>
       <div className="space" />
+      {error && (
+        <div className="card" role="alert">
+          Rezepte konnten nicht geladen werden: {error.message}
+        </div>
+      )}
       <div className="grid">
         {(recipes ?? []).map((r) => (
           <Link className="card" href={`/recipes/${r.id}`} key={r.id}>
@@ -27,7 +32,7 @@ export default async function RecipesPage() {
           </Link>
         ))}
       </div>
-      {(!recipes || recipes.length === 0) && (
+      {!error && (!recipes || recipes.length === 0) && (
         <div className="card">
           Noch keine Rezepte. <Link href="/recipes/new"><u>Erstes Rezept anlegen</u></Link>
         </div>
