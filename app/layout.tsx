@@ -1,5 +1,6 @@
 import "./globals.css";
 import Link from "next/link";
+import AuthNav from "@/components/AuthNav";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/recipes">Rezepte</Link>
             <Link href="/shopping">Einkauf</Link>
             <Link href="/stack">Stack</Link>
+            <AuthNav />
           </div>
         </nav>
         {children}

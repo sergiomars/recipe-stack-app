@@ -1,6 +1,7 @@
  "use client";
 import { useEffect,useState } from "react";
 import { createClient } from "@/lib/supabase";
+import AuthGate from "@/components/AuthGate";
 type Item={id:number,name:string,amount:string|null,unit:string|null,checked:boolean};
 export default function Shopping(){
  const [items,setItems]=useState<Item[]>([]); const [name,setName]=useState("");
@@ -10,8 +11,8 @@ export default function Shopping(){
  async function add(){if(!name.trim())return; await supabase.from("shopping_items").insert({name:name.trim()});setName("");load();}
  async function toggle(i:Item){await supabase.from("shopping_items").update({checked:!i.checked}).eq("id",i.id);load();}
  async function remove(id:number){await supabase.from("shopping_items").delete().eq("id",id);load();}
- return <main className="container"><h1>Einkauf</h1><p className="muted">Zutaten aus Rezepten oder manuell.</p>
+ return <AuthGate><main className="container"><h1>Einkauf</h1><p className="muted">Zutaten aus Rezepten oder manuell.</p>
  <div className="row"><input value={name} onChange={e=>setName(e.target.value)} placeholder="Manuell hinzufügen..." onKeyDown={e=>e.key==="Enter"&&add()}/><button className="btn" onClick={add}>+ Hinzufügen</button></div>
  <div className="space"/><div className="card"><ul className="list">{items.map(i=><li key={i.id}><label style={{margin:0,fontWeight:400,textDecoration:i.checked?"line-through":undefined,opacity:i.checked ? 0.55 : 1}}><input type="checkbox" checked={i.checked} onChange={()=>toggle(i)} style={{width:"auto",marginRight:8}}/>{[i.amount,i.unit,i.name].filter(Boolean).join(" ")}</label><button className="btn danger" onClick={()=>remove(i.id)} aria-label={`${i.name} löschen`}>×</button></li>)}</ul>{!items.length&&<p className="muted">Die Einkaufsliste ist leer. Füge Einträge manuell hinzu oder übernimm Zutaten aus deinem Rezept-Stack.</p>}</div>
- </main>;
+ </main></AuthGate>;
 }

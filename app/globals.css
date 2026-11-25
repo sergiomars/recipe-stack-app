@@ -15,6 +15,8 @@ button, input, textarea, select { font: inherit; }
 .btn { display:inline-block; border:0; border-radius:10px; padding:10px 14px; cursor:pointer; background:#222; color:#fff; }
 .btn.secondary { background:#ece9e1; color:#222; }
 .btn.danger { background:#a33; }
+.text-button { border:0; padding:0; background:none; color:#222; text-decoration:underline; cursor:pointer; }
+.nav-auth { border:0; padding:0; background:none; color:#222; cursor:pointer; font:inherit; }
 .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 .space { height:18px; }
 input, textarea, select { width:100%; padding:11px 12px; border:1px solid #d8d4ca; border-radius:9px; background:#fff; }
