@@ -10,8 +10,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Link className="brand" href="/">Recipe Stack</Link>
           <div className="navlinks">
             <Link href="/recipes">Rezepte</Link>
-            <Link href="/shopping">Einkauf</Link>
-            <Link href="/stack">Stack</Link>
             <AuthNav />
           </div>
         </nav>
