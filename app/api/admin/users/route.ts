@@ -44,7 +44,7 @@ export async function PATCH(request: NextRequest) {
   const id = typeof body?.id === "string" ? body.id : "";
   const action = body?.action;
   if (!id || (action !== "ban" && action !== "unban")) return NextResponse.json({ error: "Ungültige Anfrage." }, { status: 400 });
-  if (id === context.user.id) return NextResponse.json({ error: "Das eigene Administratorkonto kann hier nicht gesperrt werden." }, { status: 400 });
+  if (id === context.user?.id) return NextResponse.json({ error: "Das eigene Administratorkonto kann hier nicht gesperrt werden." }, { status: 400 });
 
   const { data: adminTarget } = await context.service.from("admin_users").select("user_id").eq("user_id", id).maybeSingle();
   if (adminTarget) return NextResponse.json({ error: "Administratorkonten können hier nicht geändert werden." }, { status: 400 });
@@ -68,7 +68,7 @@ export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Benutzer-ID fehlt." }, { status: 400 });
-  if (id === context.user.id) return NextResponse.json({ error: "Das eigene Administratorkonto kann nicht gelöscht werden." }, { status: 400 });
+  if (id === context.user?.id) return NextResponse.json({ error: "Das eigene Administratorkonto kann nicht gelöscht werden." }, { status: 400 });
 
   const { data: adminTarget } = await context.service.from("admin_users").select("user_id").eq("user_id", id).maybeSingle();
   if (adminTarget) return NextResponse.json({ error: "Administratorkonten können hier nicht gelöscht werden." }, { status: 400 });
