@@ -28,6 +28,10 @@ Supabase Environment Variables in Vercel hinterlegen.
 6. `SUPABASE_SERVICE_ROLE_KEY` als geheime Umgebungsvariable lokal und in Vercel setzen. Niemals mit `NEXT_PUBLIC_` veröffentlichen.
 7. Über `/admin/login` anmelden. Dort lassen sich Nutzer einladen, sperren, entsperren und löschen sowie Kategorien und Rezepte verwalten.
 
+## Rezepte importieren
+
+Führe nach `supabase/recipe-categories.sql` die Datei `supabase/import-recipes.sql` im Supabase SQL Editor aus. Sie importiert 50 europäische und Schweizer Rezepte, ordnet Zutaten, Schritte und Kategorien zu und überspringt Titel, die bereits existieren.
+
 ## Hinweis
 
 Das mitgelieferte Schema ist bewusst ein schneller Prototyp und erlaubt öffentlichen
