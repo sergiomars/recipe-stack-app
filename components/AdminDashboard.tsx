@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
+import { relationArray } from "@/lib/relations";
 
 type AdminUser = {
   id: string;
@@ -15,7 +16,7 @@ type Recipe = {
   id: string;
   title: string;
   description: string | null;
-  categories: { category: { id: string; name: string } | null }[];
+  categories: { category: { id: string; name: string } | { id: string; name: string }[] | null }[];
   ingredients: { id: number; name: string; amount: string | null; unit: string | null }[];
   steps: { id: number; step_number: number; description: string }[];
 };
@@ -84,7 +85,7 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     setEditing(recipe);
     setIngredientText(recipe.ingredients.map(item => [item.amount, item.unit, item.name].filter(Boolean).join(" ")).join("\n"));
     setStepText(recipe.steps.sort((a, b) => a.step_number - b.step_number).map(step => step.description).join("\n"));
-    setSelectedCategoryIds(recipe.categories.map(link => link.category?.id).filter((id): id is string => Boolean(id)));
+    setSelectedCategoryIds(recipe.categories.flatMap(link => relationArray(link.category).map(category => category.id)));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -190,7 +191,7 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
           <div className="row"><button className="btn" disabled={busy}>{busy ? "Speichere…" : "Änderungen speichern"}</button><button type="button" className="btn secondary" onClick={() => setEditing(null)}>Abbrechen</button></div>
         </form>}
         <ul className="list">{recipes.map(recipe => <li key={recipe.id}>
-          <div><strong>{recipe.title}</strong><br/><small className="muted">{recipe.categories.map(link=>link.category?.name).filter(Boolean).join(" · ") || "Ohne Kategorie"}</small></div>
+          <div><strong>{recipe.title}</strong><br/><small className="muted">{recipe.categories.flatMap(link=>relationArray(link.category).map(category=>category.name)).join(" · ") || "Ohne Kategorie"}</small></div>
           <div className="row"><button className="btn secondary" disabled={busy} onClick={() => startEditing(recipe)}>Bearbeiten</button><button className="btn danger" disabled={busy} onClick={() => deleteRecipe(recipe)}>Löschen</button></div>
         </li>)}</ul>
       </section>

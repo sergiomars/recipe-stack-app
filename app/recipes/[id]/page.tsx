@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase";
 import AddToShopping from "@/components/AddToShopping";
 import AddToStack from "@/components/AddToStack";
+import { relationArray } from "@/lib/relations";
 
 export default async function RecipePage({params}:{params:Promise<{id:string}>}) {
   const {id} = await params;
@@ -10,9 +11,10 @@ export default async function RecipePage({params}:{params:Promise<{id:string}>})
   const {data:categoryLinks}=await supabase.from("recipe_category_links").select("category:recipe_categories(name)").eq("recipe_id",id);
   const {data:ingredients}=await supabase.from("recipe_ingredients").select("*").eq("recipe_id",id).order("id");
   const {data:steps}=await supabase.from("recipe_steps").select("*").eq("recipe_id",id).order("step_number");
+  const categories=(categoryLinks??[]).flatMap(link=>relationArray(link.category));
 
   return <main className="container">
-    {(categoryLinks??[]).length ? categoryLinks?.map((link,index)=><span className="badge" key={index}>{link.category?.name}</span>) : <span className="badge">{recipe.category || "Rezept"}</span>}
+    {categories.length ? categories.map((category,index)=><span className="badge" key={index}>{category.name}</span>) : <span className="badge">{recipe.category || "Rezept"}</span>}
     <h1>{recipe.title}</h1><p className="muted">{recipe.description}</p>
     <div className="row"><AddToShopping recipeId={id}/><AddToStack recipeId={id}/></div>
     <div className="space"/>

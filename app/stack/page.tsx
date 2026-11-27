@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase";
 import AuthGate from "@/components/AuthGate";
-type Item={id:number,position:number,recipe:{id:string,title:string,categories:{category:{name:string}|null}[]}};
+import { relationArray } from "@/lib/relations";
+type Item={id:number,position:number,recipe:{id:string,title:string,categories:{category:{name:string}|{name:string}[]|null}[]}};
 export default function Stack(){
  const [items,setItems]=useState<Item[]>([]);
  const [message,setMessage]=useState("");
@@ -37,7 +38,7 @@ export default function Stack(){
  return <AuthGate><main className="container"><h1>Dein Rezept-Stack</h1><p className="muted">Rezepte, die du zuhause kochen möchtest – in deiner eigenen Reihenfolge.</p>
  <div className="row"><button className="btn" onClick={addStackToShopping} disabled={busy||!items.length}>{busy?"Wird hinzugefügt…":"Stack-Zutaten zur Einkaufsliste"}</button><Link className="btn secondary" href="/shopping">Einkaufsliste öffnen</Link></div>
  {message&&<p role="status" className="muted">{message}</p>}
- <div className="space"/><div className="grid">{items.map((i,n)=><div className="card" key={i.id}><span className="badge">#{n+1}</span><h3><Link href={`/recipes/${i.recipe.id}`}>{i.recipe.title}</Link></h3><p className="muted">{i.recipe.categories.map(link=>link.category?.name).filter(Boolean).join(" · ")}</p><button className="btn secondary" onClick={()=>remove(i.id)}>Aus Stack entfernen</button></div>)}</div>
+ <div className="space"/><div className="grid">{items.map((i,n)=><div className="card" key={i.id}><span className="badge">#{n+1}</span><h3><Link href={`/recipes/${i.recipe.id}`}>{i.recipe.title}</Link></h3><p className="muted">{i.recipe.categories.flatMap(link=>relationArray(link.category).map(category=>category.name)).join(" · ")}</p><button className="btn secondary" onClick={()=>remove(i.id)}>Aus Stack entfernen</button></div>)}</div>
  {!items.length&&<div className="card">Dein Stack ist leer. Öffne ein Rezept und füge es hinzu.</div>}
  </main></AuthGate>;
 }

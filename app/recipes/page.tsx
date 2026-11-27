@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase";
+import { relationArray } from "@/lib/relations";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export default async function RecipesPage() {
       <div className="grid">
         {(recipes ?? []).map((r) => (
           <Link className="card" href={`/recipes/${r.id}`} key={r.id}>
-            {r.categories?.map((link: { category: { name: string } | null }, index: number) => link.category && <span className="badge" key={`${r.id}-${index}`}>{link.category.name}</span>)}
+            {r.categories?.flatMap((link, index) => relationArray(link.category).map((category, categoryIndex) => <span className="badge" key={`${r.id}-${index}-${categoryIndex}`}>{category.name}</span>))}
             <h3>{r.title}</h3>
             <p className="muted">{r.description || "Keine Beschreibung."}</p>
           </Link>
