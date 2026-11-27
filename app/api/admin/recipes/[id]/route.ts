@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { requireAdminApi } from "@/lib/admin-api";
 
 type Params = { params: Promise<{ id: string }> };
@@ -30,6 +31,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     p_steps: normalizedSteps,
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  revalidatePath("/recipes");
+  revalidatePath(`/recipes/${id}`);
   return NextResponse.json({ message: "Rezept gespeichert." });
 }
 
@@ -39,5 +42,7 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
   const { id } = await params;
   const { error } = await context.service.from("recipes").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  revalidatePath("/recipes");
+  revalidatePath(`/recipes/${id}`);
   return NextResponse.json({ message: "Rezept gelöscht." });
 }

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 export default async function RecipesPage() {
   const supabase = createServerClient();
   const { data: recipes, error } = await supabase
