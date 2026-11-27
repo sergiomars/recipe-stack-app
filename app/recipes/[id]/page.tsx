@@ -7,11 +7,12 @@ export default async function RecipePage({params}:{params:Promise<{id:string}>})
   const supabase=createClient();
   const {data:recipe}=await supabase.from("recipes").select("*").eq("id",id).single();
   if(!recipe) return <main className="container"><h1>Nicht gefunden</h1></main>;
+  const {data:categoryLinks}=await supabase.from("recipe_category_links").select("category:recipe_categories(name)").eq("recipe_id",id);
   const {data:ingredients}=await supabase.from("recipe_ingredients").select("*").eq("recipe_id",id).order("id");
   const {data:steps}=await supabase.from("recipe_steps").select("*").eq("recipe_id",id).order("step_number");
 
   return <main className="container">
-    <span className="badge">{recipe.category || "Rezept"}</span>
+    {(categoryLinks??[]).length ? categoryLinks?.map((link,index)=><span className="badge" key={index}>{link.category?.name}</span>) : <span className="badge">{recipe.category || "Rezept"}</span>}
     <h1>{recipe.title}</h1><p className="muted">{recipe.description}</p>
     <div className="row"><AddToShopping recipeId={id}/><AddToStack recipeId={id}/></div>
     <div className="space"/>

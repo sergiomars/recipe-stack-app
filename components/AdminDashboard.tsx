@@ -15,10 +15,11 @@ type Recipe = {
   id: string;
   title: string;
   description: string | null;
-  category: string | null;
+  categories: { category: { id: string; name: string } | null }[];
   ingredients: { id: number; name: string; amount: string | null; unit: string | null }[];
   steps: { id: number; step_number: number; description: string }[];
 };
+type RecipeCategory = { id: string; name: string };
 
 async function getError(response: Response) {
   const body = await response.json().catch(() => ({}));
@@ -28,24 +29,31 @@ async function getError(response: Response) {
 export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [categories, setCategories] = useState<RecipeCategory[]>([]);
+  const [newCategory, setNewCategory] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [editing, setEditing] = useState<Recipe | null>(null);
   const [ingredientText, setIngredientText] = useState("");
   const [stepText, setStepText] = useState("");
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function loadData() {
-    const [userResponse, recipeResponse] = await Promise.all([
+    const [userResponse, recipeResponse, categoryResponse] = await Promise.all([
       fetch("/api/admin/users"),
       fetch("/api/admin/recipes"),
+      fetch("/api/admin/categories"),
     ]);
     if (!userResponse.ok) { setNotice(await getError(userResponse)); return; }
     if (!recipeResponse.ok) { setNotice(await getError(recipeResponse)); return; }
+    if (!categoryResponse.ok) { setNotice(await getError(categoryResponse)); return; }
     const userBody = await userResponse.json();
     const recipeBody = await recipeResponse.json();
+    const categoryBody = await categoryResponse.json();
     setUsers(userBody.users);
     setRecipes(recipeBody.recipes);
+    setCategories(categoryBody.categories);
     setNotice("");
   }
 
@@ -76,7 +84,27 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     setEditing(recipe);
     setIngredientText(recipe.ingredients.map(item => [item.amount, item.unit, item.name].filter(Boolean).join(" ")).join("\n"));
     setStepText(recipe.steps.sort((a, b) => a.step_number - b.step_number).map(step => step.description).join("\n"));
+    setSelectedCategoryIds(recipe.categories.map(link => link.category?.id).filter((id): id is string => Boolean(id)));
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function addCategory(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setBusy(true); setNotice("");
+    const response = await fetch("/api/admin/categories", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newCategory }),
+    });
+    if (!response.ok) setNotice(await getError(response));
+    else { setNewCategory(""); setNotice("Kategorie erstellt."); await loadData(); }
+    setBusy(false);
+  }
+
+  async function deleteCategory(category: RecipeCategory) {
+    if (!window.confirm(`Kategorie „${category.name}“ löschen? Sie wird auch aus allen Rezepten entfernt.`)) return;
+    setBusy(true); setNotice("");
+    const response = await fetch(`/api/admin/categories?id=${encodeURIComponent(category.id)}`, { method: "DELETE" });
+    if (!response.ok) setNotice(await getError(response));
+    else { setNotice("Kategorie gelöscht."); setEditing(null); await loadData(); }
+    setBusy(false);
   }
 
   async function saveRecipe(event: FormEvent<HTMLFormElement>) {
@@ -93,7 +121,7 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     setBusy(true); setNotice("");
     const response = await fetch(`/api/admin/recipes/${editing.id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: formData.get("title"), category: formData.get("category"), description: formData.get("description"), ingredients, steps }),
+      body: JSON.stringify({ title: formData.get("title"), description: formData.get("description"), ingredients, steps, categoryIds: selectedCategoryIds }),
     });
     if (!response.ok) setNotice(await getError(response));
     else { setNotice("Rezept gespeichert."); setEditing(null); await loadData(); }
@@ -144,17 +172,25 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
       <div className="space" />
       <section className="card">
         <h2>Rezepte</h2>
+        <h3>Kategorien verwalten</h3>
+        <form className="row" onSubmit={addCategory}>
+          <input required maxLength={50} placeholder="Neue Kategorie" value={newCategory} onChange={event => setNewCategory(event.target.value)} />
+          <button className="btn" disabled={busy}>{busy ? "Bitte warten…" : "Kategorie erstellen"}</button>
+        </form>
+        <ul className="list">{categories.map(category=><li key={category.id}><span>{category.name}</span><button className="btn danger" disabled={busy} onClick={()=>deleteCategory(category)}>Löschen</button></li>)}</ul>
+        <div className="space" />
         {editing && <form key={editing.id} className="form" onSubmit={saveRecipe}>
           <h3>Rezept bearbeiten</h3>
           <label htmlFor="title">Titel</label><input id="title" name="title" required defaultValue={editing.title}/>
-          <label htmlFor="category">Kategorie</label><input id="category" name="category" defaultValue={editing.category ?? ""}/>
+          <label>Kategorien (maximal 3)</label>
+          <div className="category-options">{categories.map(category=><label className="category-option" key={category.id}><input type="checkbox" checked={selectedCategoryIds.includes(category.id)} disabled={!selectedCategoryIds.includes(category.id)&&selectedCategoryIds.length>=3} onChange={event=>setSelectedCategoryIds(current=>event.target.checked?[...current,category.id]:current.filter(id=>id!==category.id))}/>{category.name}</label>)}</div>
           <label htmlFor="description">Beschreibung</label><textarea id="description" name="description" defaultValue={editing.description ?? ""}/>
           <label htmlFor="ingredients">Zutaten</label><textarea id="ingredients" rows={7} value={ingredientText} onChange={event => setIngredientText(event.target.value)}/>
           <label htmlFor="steps">Zubereitung</label><textarea id="steps" rows={7} value={stepText} onChange={event => setStepText(event.target.value)}/>
           <div className="row"><button className="btn" disabled={busy}>{busy ? "Speichere…" : "Änderungen speichern"}</button><button type="button" className="btn secondary" onClick={() => setEditing(null)}>Abbrechen</button></div>
         </form>}
         <ul className="list">{recipes.map(recipe => <li key={recipe.id}>
-          <div><strong>{recipe.title}</strong><br/><small className="muted">{recipe.category || "Ohne Kategorie"}</small></div>
+          <div><strong>{recipe.title}</strong><br/><small className="muted">{recipe.categories.map(link=>link.category?.name).filter(Boolean).join(" · ") || "Ohne Kategorie"}</small></div>
           <div className="row"><button className="btn secondary" disabled={busy} onClick={() => startEditing(recipe)}>Bearbeiten</button><button className="btn danger" disabled={busy} onClick={() => deleteRecipe(recipe)}>Löschen</button></div>
         </li>)}</ul>
       </section>

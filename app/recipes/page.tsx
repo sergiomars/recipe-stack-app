@@ -7,7 +7,7 @@ export default async function RecipesPage() {
   const supabase = createServerClient();
   const { data: recipes, error } = await supabase
     .from("recipes")
-    .select("id,title,description,category")
+    .select("id,title,description,categories:recipe_category_links(category:recipe_categories(name))")
     .order("created_at", { ascending: false });
 
   return (
@@ -28,7 +28,7 @@ export default async function RecipesPage() {
       <div className="grid">
         {(recipes ?? []).map((r) => (
           <Link className="card" href={`/recipes/${r.id}`} key={r.id}>
-            {r.category && <span className="badge">{r.category}</span>}
+            {r.categories?.map((link: { category: { name: string } | null }, index: number) => link.category && <span className="badge" key={`${r.id}-${index}`}>{link.category.name}</span>)}
             <h3>{r.title}</h3>
             <p className="muted">{r.description || "Keine Beschreibung."}</p>
           </Link>

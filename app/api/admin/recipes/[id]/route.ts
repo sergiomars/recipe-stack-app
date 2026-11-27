@@ -11,9 +11,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   const body = await request.json().catch(() => null);
   const title = typeof body?.title === "string" ? body.title.trim() : "";
   const description = typeof body?.description === "string" ? body.description.trim() : "";
-  const category = typeof body?.category === "string" ? body.category.trim() : "";
-  if (!title || !Array.isArray(body?.ingredients) || !Array.isArray(body?.steps)) {
-    return NextResponse.json({ error: "Titel, Zutaten und Zubereitung sind erforderlich." }, { status: 400 });
+  const categoryIds = Array.isArray(body?.categoryIds) ? [...new Set(body.categoryIds.filter((id: unknown) => typeof id === "string"))] as string[] : null;
+  if (!title || !Array.isArray(body?.ingredients) || !Array.isArray(body?.steps) || !categoryIds || categoryIds.length > 3) {
+    return NextResponse.json({ error: "Titel, Zutaten, Zubereitung und höchstens drei Kategorien sind erforderlich." }, { status: 400 });
   }
   const ingredients = body.ingredients.filter((item: unknown) => item && typeof item === "object" && typeof (item as { name?: unknown }).name === "string" && (item as { name: string }).name.trim());
   const steps = body.steps.filter((step: unknown) => typeof step === "string" && step.trim());
@@ -26,9 +26,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     p_recipe_id: id,
     p_title: title,
     p_description: description || null,
-    p_category: category || null,
     p_ingredients: normalizedIngredients,
     p_steps: normalizedSteps,
+    p_category_ids: categoryIds,
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   revalidatePath("/recipes");
