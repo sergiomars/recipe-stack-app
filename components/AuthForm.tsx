@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 
-export default function AuthForm() {
+export default function AuthForm({ adminMode = false }: { adminMode?: boolean }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -25,7 +25,7 @@ export default function AuthForm() {
         setBusy(false);
         return;
       }
-      router.replace("/stack");
+      router.replace(adminMode ? "/admin" : "/stack");
       router.refresh();
       return;
     }
@@ -34,7 +34,7 @@ export default function AuthForm() {
     if (error) {
       setMessage(error.message);
     } else if (data.session) {
-      router.replace("/stack");
+      router.replace(adminMode ? "/admin" : "/stack");
       router.refresh();
       return;
     } else {
@@ -46,8 +46,8 @@ export default function AuthForm() {
   return (
     <main className="container">
       <section className="card form">
-        <h1>{mode === "login" ? "Anmelden" : "Konto erstellen"}</h1>
-        <p className="muted">Dein Rezept-Stack und deine Einkaufsliste sind nur für dich sichtbar.</p>
+        <h1>{adminMode ? "Admin-Anmeldung" : mode === "login" ? "Anmelden" : "Konto erstellen"}</h1>
+        <p className="muted">{adminMode ? "Melde dich mit einem freigeschalteten Administratorkonto an." : "Dein Rezept-Stack und deine Einkaufsliste sind nur für dich sichtbar."}</p>
         <form onSubmit={submit}>
           <label htmlFor="email">E-Mail</label>
           <input id="email" type="email" autoComplete="email" required value={email} onChange={event => setEmail(event.target.value)} />
@@ -57,12 +57,12 @@ export default function AuthForm() {
           <button className="btn" type="submit" disabled={busy}>{busy ? "Bitte warten…" : mode === "login" ? "Anmelden" : "Registrieren"}</button>
         </form>
         {message && <p role="status" className="muted">{message}</p>}
-        <p>
+        {!adminMode && <p>
           {mode === "login" ? "Noch kein Konto? " : "Schon registriert? "}
           <button className="text-button" type="button" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setMessage(""); }}>
             {mode === "login" ? "Jetzt registrieren" : "Zum Login"}
           </button>
-        </p>
+        </p>}
       </section>
     </main>
   );
