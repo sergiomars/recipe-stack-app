@@ -31,7 +31,7 @@ export default function AuthNav() {
   return email ? (
     <>
       <Link href="/shopping">Einkauf</Link>
-      <Link href="/stack">Stack</Link>
+      <Link href="/stack">Vorrat</Link>
       <button className="nav-auth" onClick={logout}>Abmelden ({email})</button>
     </>
   ) : <Link href="/login">Anmelden</Link>;

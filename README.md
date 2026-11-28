@@ -1,9 +1,9 @@
-# Recipe Stack
+# Daheim
 
 Eine kleine Next.js + Supabase App mit:
 - Rezepten
 - Einkaufsliste (aus Rezepten oder manuell)
-- Rezept-Stack statt Wochenplan
+- Rezeptvorrat statt Wochenplan
 
 ## Lokal
 

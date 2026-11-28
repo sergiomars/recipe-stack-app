@@ -71,7 +71,7 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   }
 
   async function userAction(user: AdminUser, action: "ban" | "unban" | "delete") {
-    if (action === "delete" && !window.confirm(`Benutzer ${user.email ?? user.id} endgültig löschen? Seine Einkaufsliste und sein Stack werden ebenfalls gelöscht.`)) return;
+    if (action === "delete" && !window.confirm(`Benutzer ${user.email ?? user.id} endgültig löschen? Seine Einkaufsliste und sein Vorrat werden ebenfalls gelöscht.`)) return;
     setBusy(true); setNotice("");
     const response = action === "delete"
       ? await fetch(`/api/admin/users?id=${encodeURIComponent(user.id)}`, { method: "DELETE" })

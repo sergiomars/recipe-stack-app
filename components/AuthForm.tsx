@@ -47,7 +47,7 @@ export default function AuthForm({ adminMode = false }: { adminMode?: boolean })
     <main className="container">
       <section className="card form">
         <h1>{adminMode ? "Admin-Anmeldung" : mode === "login" ? "Anmelden" : "Konto erstellen"}</h1>
-        <p className="muted">{adminMode ? "Melde dich mit einem freigeschalteten Administratorkonto an." : "Dein Rezept-Stack und deine Einkaufsliste sind nur für dich sichtbar."}</p>
+        <p className="muted">{adminMode ? "Melde dich mit einem freigeschalteten Administratorkonto an." : "Dein Vorrat und deine Einkaufsliste sind nur für dich sichtbar."}</p>
         <form onSubmit={submit}>
           <label htmlFor="email">E-Mail</label>
           <input id="email" type="email" autoComplete="email" required value={email} onChange={event => setEmail(event.target.value)} />
