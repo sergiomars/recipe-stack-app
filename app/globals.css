@@ -111,6 +111,17 @@ a.module-card:hover { transform: translateY(-4px); border-color: var(--teal-200)
 .card { padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); box-shadow: 0 10px 28px #0a66550a; }
 .card h3 { margin: 0 0 8px; color: var(--teal-950); }
 .card h2 { color: var(--teal-950); }
+.recipe-section { margin-top: 30px; }
+.recipe-section .section-heading { margin-bottom: 16px; }
+.recipe-card { min-width: 0; }
+.recipe-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.recipe-card-link { display: block; }
+.recipe-card-link h3 { margin: 5px 0 8px; }
+.recipe-card-link p { margin-bottom: 0; }
+.favorite-button { display: grid; place-items: center; flex: 0 0 38px; width: 38px; height: 38px; border: 1px solid #c7e9e1; border-radius: 12px; background: var(--teal-50); color: var(--teal-700); cursor: pointer; font-size: 21px; line-height: 1; transition: transform .16s ease, background .16s ease, color .16s ease; }
+.favorite-button:hover:not(:disabled) { transform: scale(1.06); background: var(--teal-100); }
+.favorite-button.is-favorite { background: var(--teal-700); color: white; }
+.favorite-button:disabled { cursor: wait; opacity: .65; }
 .muted { color: var(--ink-soft); }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 43px; border: 1px solid transparent; border-radius: 12px; padding: 10px 16px; background: linear-gradient(135deg, var(--teal-600), var(--teal-800)); box-shadow: 0 7px 15px #08766e24; color: #fff; cursor: pointer; font-weight: 700; transition: transform .18s ease, box-shadow .18s ease, filter .18s ease; }
 .btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 20px #08766e30; filter: saturate(1.08); }

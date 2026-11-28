@@ -4,6 +4,7 @@ Eine kleine Next.js + Supabase App mit:
 - Rezepten
 - Einkaufsliste (aus Rezepten oder manuell)
 - Rezeptvorrat statt Wochenplan
+- persönliche Rezeptfavoriten
 
 ## Lokal
 
@@ -11,7 +12,8 @@ Eine kleine Next.js + Supabase App mit:
 2. `.env.local.example` nach `.env.local` kopieren
 3. Supabase URL + Anon Key eintragen
 4. `supabase/schema.sql` im Supabase SQL Editor ausführen
-5. `npm run dev`
+5. `supabase/user-data-auth.sql` und `supabase/recipe-favorites.sql` ausführen
+6. `npm run dev`
 
 ## Deployment
 
