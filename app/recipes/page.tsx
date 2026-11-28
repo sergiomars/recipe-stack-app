@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { relationArray } from "@/lib/relations";
 import FavoriteButton from "@/components/FavoriteButton";
+import AddToStack from "@/components/AddToStack";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ function RecipeCard({ recipe, favorite, canFavorite }: { recipe: any; favorite: 
       <h3>{recipe.title}</h3>
       <p className="muted">{recipe.description || "Keine Beschreibung."}</p>
     </Link>
+    <div className="recipe-card-actions"><AddToStack recipeId={recipe.id} /></div>
   </article>;
 }
 
