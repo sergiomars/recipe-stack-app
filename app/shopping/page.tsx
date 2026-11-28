@@ -3,6 +3,7 @@ import { useEffect,useState } from "react";
 import { createClient } from "@/lib/supabase";
 import AuthGate from "@/components/AuthGate";
 import { showToast } from "@/lib/toast";
+import { addShoppingItems } from "@/lib/shopping-items";
 type Item={id:number,name:string,amount:string|null,unit:string|null,checked:boolean};
 export default function Shopping(){
  const [items,setItems]=useState<Item[]>([]); const [name,setName]=useState("");
@@ -10,7 +11,7 @@ export default function Shopping(){
  const supabase=createClient();
  async function load(){const {data,error}=await supabase.from("shopping_items").select("*").order("created_at");if(error){showToast(error.message,"error");return;}setItems(data??[]);}
  useEffect(()=>{load()},[]);
- async function add(){if(!name.trim())return;const {error}=await supabase.from("shopping_items").insert({name:name.trim()});if(error){showToast(error.message,"error");return;}setName("");showToast("Eintrag zur Einkaufsliste hinzugefügt.");load();}
+ async function add(){if(!name.trim())return;try{const result=await addShoppingItems([{name:name.trim()}]);setName("");showToast(result.merged?"Eintrag mit vorhandenem Einkauf zusammengeführt.":"Eintrag zur Einkaufsliste hinzugefügt.");load();}catch(error){showToast(error instanceof Error?error.message:"Eintrag konnte nicht hinzugefügt werden.","error");}}
  async function toggle(i:Item){const {error}=await supabase.from("shopping_items").update({checked:!i.checked}).eq("id",i.id);if(error){showToast(error.message,"error");return;}showToast(i.checked?"Eintrag wieder offen.":"Eintrag abgehakt.","info");load();}
  async function remove(id:number){const {error}=await supabase.from("shopping_items").delete().eq("id",id);if(error){showToast(error.message,"error");return;}showToast("Eintrag aus der Einkaufsliste entfernt.","info");load();}
  async function clearList(){if(!items.length||clearing)return;setClearing(true);const {error}=await supabase.from("shopping_items").delete().not("id","is",null);if(error){showToast(error.message,"error");}else{setItems([]);showToast("Einkaufsliste geleert.","info");}setClearing(false);}

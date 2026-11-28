@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase";
 import AuthGate from "@/components/AuthGate";
 import { relationArray } from "@/lib/relations";
 import { showToast } from "@/lib/toast";
+import { addShoppingItems } from "@/lib/shopping-items";
 type Item={id:number,position:number,recipe:{id:string,title:string,categories:{category:{name:string}|{name:string}[]|null}[]}};
 export default function Stack(){
  const [items,setItems]=useState<Item[]>([]);
@@ -29,11 +30,14 @@ export default function Stack(){
   const {data:ingredients,error:ingredientsError}=await supabase.from("recipe_ingredients").select("recipe_id,name,amount,unit").in("recipe_id",recipeIds);
   if(ingredientsError){showToast(`Zutaten konnten nicht geladen werden: ${ingredientsError.message}`,"error");setBusy(false);return;}
   if(!ingredients?.length){showToast("Für die Rezepte in deinem Vorrat sind keine Zutaten hinterlegt.","info");setBusy(false);return;}
-  const {error}=await supabase.from("shopping_items").insert(ingredients.map(ingredient=>({
-   name:ingredient.name,amount:ingredient.amount,unit:ingredient.unit,source_recipe_id:ingredient.recipe_id
-  })));
-  if(error) showToast(`Zutaten konnten nicht hinzugefügt werden: ${error.message}`,"error");
-  else showToast(`${ingredients.length} Zutaten zur Einkaufsliste hinzugefügt.`);
+  try {
+   const result=await addShoppingItems(ingredients.map(ingredient=>({
+    name:ingredient.name,amount:ingredient.amount,unit:ingredient.unit,source_recipe_id:ingredient.recipe_id
+   })));
+   showToast(`${result.added} Zutaten hinzugefügt${result.merged ? `, ${result.merged} Mengen zusammengeführt` : ""}.`);
+  } catch(error) {
+   showToast(`Zutaten konnten nicht hinzugefügt werden: ${error instanceof Error ? error.message : "Unbekannter Fehler."}`,"error");
+  }
   setBusy(false);
  }
  return <AuthGate><main className="container"><h1>Dein Vorrat</h1><p className="muted">Rezepte, die du zuhause kochen möchtest – in deiner eigenen Reihenfolge.</p>
