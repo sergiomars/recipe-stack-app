@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
+import { showToast } from "@/lib/toast";
 
 export default function NewRecipe() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function NewRecipe() {
 
   useEffect(() => {
     supabase.from("recipe_categories").select("id,name").order("name").then(({data,error}) => {
-      if(error) alert(`Kategorien konnten nicht geladen werden: ${error.message}`);
+      if(error) showToast(`Kategorien konnten nicht geladen werden: ${error.message}`,"error");
       else setCategories(data ?? []);
     });
   }, [supabase]);
@@ -28,11 +29,11 @@ export default function NewRecipe() {
       .from("recipes")
       .insert({title, description, category:null})
       .select("id").single();
-    if (error || !recipe) { alert(error?.message ?? "Fehler"); setBusy(false); return; }
+    if (error || !recipe) { showToast(error?.message ?? "Rezept konnte nicht erstellt werden.","error"); setBusy(false); return; }
 
     if (categoryIds.length) {
       const {error:categoryError}=await supabase.from("recipe_category_links").insert(categoryIds.map(category_id=>({recipe_id:recipe.id,category_id})));
-      if(categoryError){alert(`Rezept erstellt, Kategorien konnten nicht gespeichert werden: ${categoryError.message}`);setBusy(false);return;}
+      if(categoryError){showToast(`Rezept erstellt, Kategorien konnten nicht gespeichert werden: ${categoryError.message}`,"error");setBusy(false);return;}
     }
 
     const ingredientRows = ingredients.split("\n").filter(Boolean).map(line => {
@@ -40,8 +41,11 @@ export default function NewRecipe() {
       return { recipe_id: recipe.id, amount: m?.[1] ?? null, unit: m?.[2] ?? null, name: m?.[3] ?? line };
     });
     const stepRows = steps.split("\n").filter(Boolean).map((description,i) => ({recipe_id:recipe.id, step_number:i+1, description}));
-    await supabase.from("recipe_ingredients").insert(ingredientRows);
-    await supabase.from("recipe_steps").insert(stepRows);
+    const {error:ingredientError}=await supabase.from("recipe_ingredients").insert(ingredientRows);
+    if(ingredientError){showToast(`Rezept erstellt, Zutaten konnten nicht gespeichert werden: ${ingredientError.message}`,"error");setBusy(false);return;}
+    const {error:stepsError}=await supabase.from("recipe_steps").insert(stepRows);
+    if(stepsError){showToast(`Rezept erstellt, Zubereitung konnte nicht gespeichert werden: ${stepsError.message}`,"error");setBusy(false);return;}
+    showToast("Rezept erstellt.");
     router.push(`/recipes/${recipe.id}`);
   }
 

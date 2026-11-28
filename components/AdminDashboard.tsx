@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import { relationArray } from "@/lib/relations";
+import { showToast } from "@/lib/toast";
 
 type AdminUser = {
   id: string;
@@ -37,7 +38,6 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [ingredientText, setIngredientText] = useState("");
   const [stepText, setStepText] = useState("");
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
-  const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function loadData() {
@@ -46,38 +46,37 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
       fetch("/api/admin/recipes"),
       fetch("/api/admin/categories"),
     ]);
-    if (!userResponse.ok) { setNotice(await getError(userResponse)); return; }
-    if (!recipeResponse.ok) { setNotice(await getError(recipeResponse)); return; }
-    if (!categoryResponse.ok) { setNotice(await getError(categoryResponse)); return; }
+    if (!userResponse.ok) { showToast(await getError(userResponse), "error"); return; }
+    if (!recipeResponse.ok) { showToast(await getError(recipeResponse), "error"); return; }
+    if (!categoryResponse.ok) { showToast(await getError(categoryResponse), "error"); return; }
     const userBody = await userResponse.json();
     const recipeBody = await recipeResponse.json();
     const categoryBody = await categoryResponse.json();
     setUsers(userBody.users);
     setRecipes(recipeBody.recipes);
     setCategories(categoryBody.categories);
-    setNotice("");
   }
 
   useEffect(() => { loadData(); }, []);
 
   async function inviteUser(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setNotice("");
+    event.preventDefault(); setBusy(true);
     const response = await fetch("/api/admin/users", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: inviteEmail }),
     });
-    if (!response.ok) setNotice(await getError(response));
-    else { const body = await response.json(); setNotice(body.message); setInviteEmail(""); await loadData(); }
+    if (!response.ok) showToast(await getError(response), "error");
+    else { const body = await response.json(); showToast(body.message); setInviteEmail(""); await loadData(); }
     setBusy(false);
   }
 
   async function userAction(user: AdminUser, action: "ban" | "unban" | "delete") {
     if (action === "delete" && !window.confirm(`Benutzer ${user.email ?? user.id} endgültig löschen? Seine Einkaufsliste und sein Vorrat werden ebenfalls gelöscht.`)) return;
-    setBusy(true); setNotice("");
+    setBusy(true);
     const response = action === "delete"
       ? await fetch(`/api/admin/users?id=${encodeURIComponent(user.id)}`, { method: "DELETE" })
       : await fetch("/api/admin/users", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: user.id, action }) });
-    if (!response.ok) setNotice(await getError(response));
-    else { const body = await response.json(); setNotice(body.message); await loadData(); }
+    if (!response.ok) showToast(await getError(response), "error");
+    else { const body = await response.json(); showToast(body.message); await loadData(); }
     setBusy(false);
   }
 
@@ -90,21 +89,21 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   }
 
   async function addCategory(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setNotice("");
+    event.preventDefault(); setBusy(true);
     const response = await fetch("/api/admin/categories", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: newCategory }),
     });
-    if (!response.ok) setNotice(await getError(response));
-    else { setNewCategory(""); setNotice("Kategorie erstellt."); await loadData(); }
+    if (!response.ok) showToast(await getError(response), "error");
+    else { setNewCategory(""); showToast("Kategorie erstellt."); await loadData(); }
     setBusy(false);
   }
 
   async function deleteCategory(category: RecipeCategory) {
     if (!window.confirm(`Kategorie „${category.name}“ löschen? Sie wird auch aus allen Rezepten entfernt.`)) return;
-    setBusy(true); setNotice("");
+    setBusy(true);
     const response = await fetch(`/api/admin/categories?id=${encodeURIComponent(category.id)}`, { method: "DELETE" });
-    if (!response.ok) setNotice(await getError(response));
-    else { setNotice("Kategorie gelöscht."); setEditing(null); await loadData(); }
+    if (!response.ok) showToast(await getError(response), "error");
+    else { showToast("Kategorie gelöscht."); setEditing(null); await loadData(); }
     setBusy(false);
   }
 
@@ -119,22 +118,22 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
         : { amount: "", unit: "", name: line };
     });
     const steps = stepText.split("\n").map(line => line.trim()).filter(Boolean);
-    setBusy(true); setNotice("");
+    setBusy(true);
     const response = await fetch(`/api/admin/recipes/${editing.id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: formData.get("title"), description: formData.get("description"), ingredients, steps, categoryIds: selectedCategoryIds }),
     });
-    if (!response.ok) setNotice(await getError(response));
-    else { setNotice("Rezept gespeichert."); setEditing(null); await loadData(); }
+    if (!response.ok) showToast(await getError(response), "error");
+    else { showToast("Rezept gespeichert."); setEditing(null); await loadData(); }
     setBusy(false);
   }
 
   async function deleteRecipe(recipe: Recipe) {
     if (!window.confirm(`Rezept „${recipe.title}“ endgültig löschen?`)) return;
-    setBusy(true); setNotice("");
+    setBusy(true);
     const response = await fetch(`/api/admin/recipes/${recipe.id}`, { method: "DELETE" });
-    if (!response.ok) setNotice(await getError(response));
-    else { setNotice("Rezept gelöscht."); if (editing?.id === recipe.id) setEditing(null); await loadData(); }
+    if (!response.ok) showToast(await getError(response), "error");
+    else { showToast("Rezept gelöscht."); if (editing?.id === recipe.id) setEditing(null); await loadData(); }
     setBusy(false);
   }
 
@@ -149,8 +148,6 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
         <div><span className="badge">Administration</span><h1>Adminbereich</h1><p className="muted">Angemeldet als {adminEmail}</p></div>
         <button className="btn secondary" onClick={logout}>Abmelden</button>
       </div>
-      {notice && <p className="card" role="status">{notice}</p>}
-
       <section className="card">
         <h2>Benutzer</h2>
         <form className="row" onSubmit={inviteUser}>
